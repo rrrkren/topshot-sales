@@ -17,7 +17,7 @@ func handleErr(err error) {
 
 func main() {
 	// connect to flow
-	flowClient, err := client.New("access-001.candidate9.nodes.onflow.org:9000", grpc.WithInsecure())
+	flowClient, err := client.New("access-001.mainnet1.nodes.onflow.org:9000", grpc.WithInsecure())
 	handleErr(err)
 	err = flowClient.Ping(context.Background())
 	handleErr(err)
