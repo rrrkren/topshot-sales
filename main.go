@@ -17,7 +17,7 @@ func handleErr(err error) {
 
 func main() {
 	// connect to flow
-	flowClient, err := client.New("access-001.candidate9.nodes.onflow.org:9000", grpc.WithInsecure())
+	flowClient, err := client.New("access.mainnet.nodes.onflow.org:9000", grpc.WithInsecure())
 	handleErr(err)
 	err = flowClient.Ping(context.Background())
 	handleErr(err)
@@ -30,7 +30,7 @@ func main() {
 	// fetch block events of topshot Market.MomentPurchased events for the past 1000 blocks
 	blockEvents, err := flowClient.GetEventsForHeightRange(context.Background(), client.EventRangeQuery{
 		Type:        "A.c1e4f4f4c4257510.Market.MomentPurchased",
-		StartHeight: latestBlock.Height - 1000,
+		StartHeight: latestBlock.Height - 500,
 		EndHeight:   latestBlock.Height,
 	})
 	handleErr(err)
