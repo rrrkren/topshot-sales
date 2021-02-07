@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/rrrkren/topshot-sales/topshot"
-
 	"github.com/onflow/flow-go-sdk/client"
+	"github.com/rrrkren/topshot-sales/topshot"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 )
 
@@ -15,9 +15,40 @@ func handleErr(err error) {
 	}
 }
 
+type Config struct {
+	MomentEventDepth int    `mapstructure:"MOMENT_EVENT_DEPTH"`
+	MomentEventType  string `mapstructure:"MOMENT_EVENT_TYPE"`
+	OnflowHostname   string `mapstructure:"ONFLOW_HOSTNAME"`
+}
+
+func LoadConfig(path string) (config Config, err error) {
+	viper.AddConfigPath(path)
+	viper.SetConfigName("default")
+	viper.SetConfigType("env")
+	viper.BindEnv("MOMENT_EVENT_DEPTH")
+	viper.BindEnv("MOMENT_EVENT_TYPE")
+	viper.BindEnv("ONFLOW_HOSTNAME")
+	viper.AutomaticEnv()
+	err = viper.ReadInConfig()
+	if err != nil {
+		return
+	}
+	err = viper.Unmarshal(&config)
+	return
+}
+
 func main() {
+
+	config, err := LoadConfig(".")
+	if err != nil {
+		fmt.Println("cannot load config:", err)
+	}
+	fmt.Println(config)
+
+	//To get from the toml file or env var
+
 	// connect to flow
-	flowClient, err := client.New("access.mainnet.nodes.onflow.org:9000", grpc.WithInsecure())
+	flowClient, err := client.New(config.OnflowHostname, grpc.WithInsecure())
 	handleErr(err)
 	err = flowClient.Ping(context.Background())
 	handleErr(err)
@@ -27,10 +58,10 @@ func main() {
 	handleErr(err)
 	fmt.Println("current height: ", latestBlock.Height)
 
-	// fetch block events of topshot Market.MomentPurchased events for the past 1000 blocks
+	// fetch block events of defined type and depth, defaults are topshot Market.MomentPurchased events for the past 500 blocks
 	blockEvents, err := flowClient.GetEventsForHeightRange(context.Background(), client.EventRangeQuery{
-		Type:        "A.c1e4f4f4c4257510.Market.MomentPurchased",
-		StartHeight: latestBlock.Height - 500,
+		Type:        config.MomentEventType,
+		StartHeight: latestBlock.Height - uint64(config.MomentEventDepth),
 		EndHeight:   latestBlock.Height,
 	})
 	handleErr(err)
